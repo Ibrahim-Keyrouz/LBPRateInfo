@@ -1,5 +1,6 @@
 package com.boteam.sou2sawda.controller;
 
+import com.boteam.sou2sawda.model.FinalResponse;
 import com.boteam.sou2sawda.model.RateResponse;
 import com.boteam.sou2sawda.service.RateService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +19,8 @@ public class RateController {
 
     @PostMapping("/fetch")
     ResponseEntity<Object> fetch() {
-        RateResponse rr = rateService.fetch();
-            return new ResponseEntity<Object>(rr, rr.getErrorCode());
+        FinalResponse fr = rateService.fetch();
+            return new ResponseEntity<Object>(fr, fr.getErrorCode());
 
     }
 

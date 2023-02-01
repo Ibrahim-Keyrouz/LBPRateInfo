@@ -1,5 +1,8 @@
 package com.boteam.sou2sawda.service;
 
+import com.boteam.sou2sawda.model.FinalFuel;
+import com.boteam.sou2sawda.model.FinalResponse;
+import com.boteam.sou2sawda.model.Fuel;
 import com.boteam.sou2sawda.model.RateResponse;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.springframework.http.*;
@@ -12,6 +15,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 import javax.net.ssl.SSLContext;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -23,7 +27,7 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSession;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.*;
 
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
@@ -34,16 +38,15 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
 
 @Service
 public class RateServiceImpl implements RateService{
 
 
     @Override
-    public RateResponse fetch() {
+    public FinalResponse fetch() {
+
+        FinalResponse fr = new FinalResponse();
 
         Properties props = System.getProperties();
 
@@ -59,7 +62,7 @@ public class RateServiceImpl implements RateService{
 
             String urlTemplate = UriComponentsBuilder.fromHttpUrl(url)
                     .queryParam("currency", "LBP")
-                    .queryParam("_ver", "t"+new SimpleDateFormat("yyyyMddHH").format(new Date()))
+                    .queryParam("_ver", "t"+new SimpleDateFormat("yyyyMdH").format(new Date()))
 
                     .encode()
                     .toUriString();
@@ -78,20 +81,45 @@ public class RateServiceImpl implements RateService{
                 rateResponse.setLiraRate(rateResp.getBody().getLiraRate());
                 rateResponse.setOmt(rateResp.getBody().getOmt());
                 rateResponse.setErrorCode(rateResp.getStatusCode());
-                return rateResponse;
+                ArrayList<Object> buy =  rateResp.getBody().getLiraRate().getBuy().get(rateResp.getBody().getLiraRate().getBuy().size() - 1);
+                ArrayList<Object> sell =  rateResp.getBody().getLiraRate().getSell().get(rateResp.getBody().getLiraRate().getSell().size() - 1);
+                ArrayList<Object> omt =  rateResp.getBody().getOmt().get(rateResp.getBody().getOmt().size() - 1);
+
+                fr.setDate(new SimpleDateFormat("dd MMM yyyy HH:mm:ss:SSS Z").format(new Date((Long)buy.get(0))));
+                fr.setBuy((Integer)buy.get(buy.size() - 1));
+                fr.setSell((Integer)sell.get(sell.size() - 1));
+                fr.setOmt((Integer)omt.get(omt.size() - 1));
+                fr.setErrorCode(rateResp.getStatusCode());
+
+                ArrayList<FinalFuel> fuel = new ArrayList<>();
+                for (Fuel f : rateResp.getBody().getFuel()) {
+                    FinalFuel finalFuel = new FinalFuel();
+                    ArrayList<Object> data = f.getData().get(f.getData().size() - 1);
+                    finalFuel.setPrice(new BigDecimal(String.valueOf(data.get(data.size() - 1))));
+                    finalFuel.setProduct(f.getName());
+                    fuel.add(finalFuel);
+                }
+
+                fr.setFuel(fuel);
+
+                return fr;
             } else if (rateResp.getStatusCode().is4xxClientError()) {
                 rateResponse.setErrorCode(rateResp.getStatusCode());
-                return rateResponse;
+                fr.setErrorCode(rateResp.getStatusCode());
+                return fr;
             } else if (rateResp.getStatusCode().is5xxServerError()) {
                 rateResponse.setErrorCode(rateResp.getStatusCode());
-                return rateResponse;
+                fr.setErrorCode(rateResp.getStatusCode());
+                return fr;
             }
             rateResponse.setErrorCode(rateResp.getStatusCode());
-            return rateResponse;
+            fr.setErrorCode(rateResp.getStatusCode());
+            return fr;
         }catch (Exception e) {
             rateResponse.setErrorCode(HttpStatus.INTERNAL_SERVER_ERROR);
+            fr.setErrorCode(HttpStatus.INTERNAL_SERVER_ERROR);
             System.out.println(e);
-            return rateResponse;
+            return fr;
         }
     }
 }

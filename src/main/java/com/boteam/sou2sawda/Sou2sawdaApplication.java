@@ -10,7 +10,9 @@ import java.util.Date;
 public class Sou2sawdaApplication {
 
     public static void main(String[] args) {
- SpringApplication.run(Sou2sawdaApplication.class, args);
+
+        SpringApplication.run(Sou2sawdaApplication.class, args);
+
     }
 
 }

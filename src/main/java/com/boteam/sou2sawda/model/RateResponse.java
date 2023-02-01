@@ -10,10 +10,12 @@ public class RateResponse {
     @JsonProperty("lirarate")
     private LiraRate liraRate ;
 
+
     @JsonProperty("fuel")
     private ArrayList<Fuel> fuel;
     @JsonProperty("omt")
     private ArrayList<ArrayList<Object>> omt;
+
 
     //   public ArrayList<ArrayList<Object>> sayrafa;
 
@@ -27,6 +29,7 @@ public class RateResponse {
 
 
     public LiraRate getLiraRate() {
+
         return liraRate;
     }
 

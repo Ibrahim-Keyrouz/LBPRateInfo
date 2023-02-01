@@ -15,10 +15,12 @@ public class Fuel {
     }
 
     public ArrayList<ArrayList<Object>> getData() {
-        return data;
+       return data;
     }
 
     public void setData(ArrayList<ArrayList<Object>> data) {
         this.data = data;
     }
+
+
 }
